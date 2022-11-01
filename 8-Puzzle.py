@@ -1,5 +1,6 @@
 from copy import deepcopy
 import numpy as np
+import math
 
 trivial = [[1, 2, 3], 
            [4, 5, 6], 
@@ -44,6 +45,7 @@ class node:
     def children(self):
         #list for children
         successors = []
+        temp = 0
         #finding where the 0 is in the 2d array
         for i, j in enumerate(self.state):
             #if 0 is in the current row
@@ -65,9 +67,14 @@ class node:
             #not moving up or down
             u_d_shift = 0
             #new list with the shifts included
-            next_state, cost = self.copy_list(row, col, l_r_shift, u_d_shift)
+            next_state = self.copy_list(row, col, l_r_shift, u_d_shift)
+            cost = abs(l_r_shift + u_d_shift)
             #add the new list to the list of states
-            successors.append(node(next_state, self.depth + 1, self.cost + cost))
+            if temp > 0:
+                successors.append(node(next_state, self.depth + 1, self.cost + cost))
+            else:
+                temp += 1
+                successors.append(node(next_state, self.depth, self.cost + cost))
         
         #check to see if it can move right by making sure the 0 is not in the last column
         if col != 2 and (row != 0 or row != 1 or row != 2):
@@ -76,9 +83,14 @@ class node:
             #not moving up or down
             u_d_shift = 0
             #new list with the shifts included
-            next_state, cost = self.copy_list(row, col, l_r_shift, u_d_shift)
+            next_state = self.copy_list(row, col, l_r_shift, u_d_shift)
+            cost = abs(l_r_shift + u_d_shift)
             #add the new list to the list of states
-            successors.append(node(next_state, self.depth + 1, self.cost + cost))
+            if temp > 0:
+                successors.append(node(next_state, self.depth + 1, self.cost + cost))
+            else:
+                temp += 1
+                successors.append(node(next_state, self.depth, self.cost + cost))
 
         #check to see if it can move up by making sure the 0 is not in the first row
         if row != 0 and (col != 0 or col != 1 or col != 2):
@@ -87,20 +99,30 @@ class node:
             #shift up by adding -1 to the index
             u_d_shift = -1
             #new list with the shifts included
-            next_state, cost = self.copy_list(row, col, l_r_shift, u_d_shift)
+            next_state = self.copy_list(row, col, l_r_shift, u_d_shift)
+            cost = abs(l_r_shift + u_d_shift)
             #add the new list to the list of states
-            successors.append(node(next_state, self.depth + 1, self.cost + cost))
+            if temp > 0:
+                successors.append(node(next_state, self.depth + 1, self.cost + cost))
+            else:
+                temp += 1
+                successors.append(node(next_state, self.depth, self.cost + cost))
         
         #check to see if it can move down by making sure the 0 is not in the last row
         if row != 2 and (col != 0 or col != 1 or col != 2):
             #not moving left or right
             l_r_shift = 0
             #shift up by adding 1 to the index
-            u_d_shift = 1
+            u_d_shift =  1
             #new list with shifts included
-            next_state, cost = self.copy_list(row, col, l_r_shift, u_d_shift)
+            next_state = self.copy_list(row, col, l_r_shift, u_d_shift)
+            cost = abs(l_r_shift + u_d_shift)
             #add the new list to the list of states
-            successors.append(node(next_state, self.depth + 1, self.cost + cost))
+            if temp > 0:
+                successors.append(node(next_state, self.depth + 1, self.cost + cost))
+            else:
+                temp += 1
+                successors.append(node(next_state, self.depth, self.cost + cost))
 
         #return the list of new states
         return successors
@@ -116,8 +138,8 @@ class node:
         new_list[zero_row + vertical_shift][zero_col + horizontal_shift] = 0
         #set the place where 0 was as the new number
         new_list[zero_row][zero_col] = temp_place
-        #return the new list and the cost
-        return new_list, temp_place
+        #return the new list
+        return new_list
     
     def misplaced_tile(self):
         #converting working state to NumPy arrays
@@ -225,7 +247,8 @@ def uniform_cost_search(puzzle, heuristic):
         if node_from_queue.state == eight_goal_state:
             while len(stack_to_print) > 0:
                 print_puzzle(stack_to_print.pop())
-            print("Number of nodes expanded :", num_nodes_expanded)
+            print("Solution depth was:", int((math.sqrt(i.depth) // 1)))
+            print("Number of nodes expanded:", num_nodes_expanded)
             print("Max queue size:", max_queue_size)
             return node_from_queue
         
@@ -238,7 +261,8 @@ def uniform_cost_search(puzzle, heuristic):
                 stack_to_print.append(node_from_queue.state)
                 while len(stack_to_print) > 0:
                     print_puzzle(stack_to_print.pop())
-                print("Number of nodes expanded :", num_nodes_expanded)
+                print("Solution depth was:", int((math.sqrt(i.depth) // 1)))
+                print("Number of nodes expanded:", num_nodes_expanded)
                 print("Max queue size:", max_queue_size)
                 return node_from_queue
 
@@ -248,7 +272,9 @@ def uniform_cost_search(puzzle, heuristic):
                 working_queue.append(i)
 
         #check heuristics and then sort the queue by the heuristic
-        if heuristic == 2:
+        if heuristic == 1:
+            working_queue.sort(key = lambda node: node.cost, reverse = True)
+        elif heuristic == 2:
             working_queue.sort(key = lambda node: node.misplaced_tile(), reverse = True)
         elif heuristic == 3:
             working_queue.sort(key = lambda node: node.manhattan_distance(), reverse = True)
@@ -283,4 +309,4 @@ def main():
     
     return
 
-main()
+main()  
